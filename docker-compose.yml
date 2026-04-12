@@ -1,0 +1,16 @@
+services:
+  mqtt-broker:
+    image: eclipse-mosquitto:latest
+    container_name: mqtt-broker
+    restart: always
+    ports:
+      - "1883:1883"
+      - "8883:8883"
+    volumes:
+      - ./config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./config/passwd:/mosquitto/config/passwd:ro
+      - ./config/acl:/mosquitto/config/acl:ro
+      - ./certs:/mosquitto/config/certs:ro
+      - ./data:/mosquitto/data
+      - ./log:/mosquitto/log
+    user: "${UID:-1883}:${GID:-1883}" # Default mosquitto user/group inside container

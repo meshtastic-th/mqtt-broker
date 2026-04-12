@@ -1,0 +1,3 @@
+# ACL for MQTT Broker
+user admin
+topic readwrite msh/TH
