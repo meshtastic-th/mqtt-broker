@@ -31,7 +31,12 @@ chmod +x generate-certs.sh
 
 # For a specific domain
 ./generate-certs.sh mqtt.meshgw.com
+
+# For a specific IP address
+./generate-certs.sh 192.168.1.10
 ```
+
+**Note:** The script automatically adds **Subject Alternative Names (SAN)** for both DNS and IP, which is required by modern MQTT clients and browsers for strict certificate validation. Ensure the argument you pass matches the address you will use to connect.
 
 This creates a CA certificate, a server key, and a signed server certificate in the `certs/` directory.
 
