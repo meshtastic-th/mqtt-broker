@@ -2,11 +2,11 @@
 
 # Configuration
 DAYS=365
-COUNTRY="US"
-STATE="State"
-CITY="City"
-ORG="Organization"
-OU="Unit"
+COUNTRY="TH"
+STATE="Bangkok"
+CITY="Bangkok"
+ORG="Meshtastic Thailand Community"
+OU="Community"
 CN="${1:-localhost}"
 
 # Check if certs directory exists
