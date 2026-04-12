@@ -51,12 +51,81 @@ Check if the container is running:
 docker ps
 ```
 
+## Configuration Validation
+
+Before starting or restarting the broker, you can validate the syntax of your configuration files (including `mosquitto.conf`, `passwd`, and `acl`) to ensure there are no errors:
+
+```bash
+docker-compose run --rm mqtt-broker mosquitto -c /mosquitto/config/mosquitto.conf --test-config
+```
+
+This command will:
+1. Parse the configuration file.
+2. Check for missing files, syntax errors, or invalid settings.
+3. Exit with a success message if everything is valid, or report errors to the console.
+
+**Note:** This is especially useful after adding new users or modifying ACL rules.
+
 ## Authentication & ACL
 
 The broker is configured with:
 - **Username:** `admin`
 - **Password:** `password`
 - **ACL:** Access restricted to the topic `msh/TH` only.
+
+## User Management
+
+The broker uses a `passwd` file for authentication and an `acl` file for access control. These are located in the `config/` directory.
+
+### 1. Adding/Updating Users
+
+To add a new user or update an existing user's password, you can use the `mosquitto_passwd` command. Since the configuration files are mounted as **read-only** in the Docker container, you should perform these changes on the host machine.
+
+#### If you have `mosquitto-clients` installed on your host:
+
+```bash
+# Add or update a user (you will be prompted for a password)
+mosquitto_passwd config/passwd <username>
+```
+
+#### Using Docker (if you don't have it installed locally):
+
+Since the `config/` directory is mounted as read-only (`:ro`) in `docker-compose.yml`, you cannot run `mosquitto_passwd` directly inside the container to update the files. Instead, you can run a temporary container to generate the password entry and then manually add it to `config/passwd`, or temporarily remove the `:ro` flag.
+
+**Recommended approach (on host):**
+1. Generate the hashed password:
+   ```bash
+   docker run --rm eclipse-mosquitto mosquitto_passwd -b /dev/null <username> <password>
+   ```
+2. Copy the resulting line (e.g., `user:$6$...`) and append it to `config/passwd`.
+
+**Note:** After adding or updating a user, you must restart the broker for the changes to take effect:
+
+```bash
+docker-compose restart mqtt-broker
+```
+
+### 2. Managing Access Control (ACL)
+
+The `config/acl` file defines which topics a user can read from or write to. Since it is mounted as read-only, edit it on your host machine.
+
+**Format:**
+```text
+user <username>
+topic [read|write|readwrite] <topic_name>
+```
+
+**Example:**
+To allow `newuser` to read and write to `msh/TH/sensors`:
+1. Edit `config/acl` on the host:
+   ```text
+   user newuser
+   topic readwrite msh/TH/sensors
+   ```
+2. Restart the broker:
+   ```bash
+   docker-compose restart mqtt-broker
+   ```
 
 ## MQTT Bridging
 
