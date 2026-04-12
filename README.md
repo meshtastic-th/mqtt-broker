@@ -93,9 +93,13 @@ mosquitto_passwd config/passwd <username>
 Since the `config/` directory is mounted as read-only (`:ro`) in `docker-compose.yml`, you cannot run `mosquitto_passwd` directly inside the container to update the files. Instead, you can run a temporary container to generate the password entry and then manually add it to `config/passwd`, or temporarily remove the `:ro` flag.
 
 **Recommended approach (on host):**
-1. Generate the hashed password:
+1. Generate the hashed password using Docker:
    ```bash
-   docker run --rm eclipse-mosquitto mosquitto_passwd -b /dev/null <username> <password>
+   docker run --rm eclipse-mosquitto sh -c "mosquitto_passwd -b -c /tmp/passwd <username> <password> && cat /tmp/passwd"
+   ```
+   *Alternative (using openssl if available locally):*
+   ```bash
+   echo -n "<username>:" && openssl passwd -6 "<password>"
    ```
 2. Copy the resulting line (e.g., `user:$6$...`) and append it to `config/passwd`.
 

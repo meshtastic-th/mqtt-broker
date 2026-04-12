@@ -27,7 +27,13 @@ openssl x509 -req -in certs/server.csr -CA certs/ca.crt -CAkey certs/ca.key -CAc
 # Set permissions for Mosquitto (UID 1883)
 chmod 644 certs/ca.crt certs/server.crt
 chmod 600 certs/server.key
-# Note: If running on Linux, you might need to chown to 1883:1883
-# chown 1883:1883 certs/*
+
+# Attempt to set ownership if running on Linux/Docker host
+if [ "$(id -u)" -eq 0 ]; then
+    chown -R 1883:1883 certs/ data/ log/ 2>/dev/null || true
+    echo "Ownership set to 1883:1883 for Mosquitto."
+else
+    echo "Note: If you see permission errors in Docker logs, run: sudo chown -R 1883:1883 certs/ data/ log/"
+fi
 
 echo "Certificates generated in certs/ directory."
