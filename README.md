@@ -184,8 +184,32 @@ Trying to publish to any other topic will be denied:
 mosquitto_pub -h localhost -p 1883 -u admin -P password -t "other/topic" -m "This should fail"
 ```
 
+## TLS/SSL Trust Note
+
+If you receive a **"self signed certificate in certificate chain"** error, it is because your client does not trust the CA certificate you generated.
+
+1.  **Always provide the CA file:** In command-line tools, use `--cafile certs/ca.crt`.
+2.  **Hostname Matching:** The hostname you use to connect MUST match the **Common Name (CN)** you provided when running `./generate-certs.sh`. If you connect via IP but generated the cert for `localhost`, the verification will fail.
+3.  **Insecure Mode (Development Only):** If you cannot provide a CA file, some clients allow an "insecure" or "allow unauthorized" mode, but this is not recommended for production.
+
 ## Maintenance
 
 - **Persistence:** MQTT data is persisted in the `./data` directory.
 - **Logs:** View logs using `docker-compose logs -f` or by checking `./log/mosquitto.log`.
 - **Customizing:** You can modify `config/mosquitto.conf` to add users or change authentication settings.
+
+## Troubleshooting
+
+### Permission Denied Errors
+
+If you see errors like `Permission denied`, `Unable to open log file`, or `Error: Unable to load server key file` in the Docker logs (`docker-compose logs`), it is because the Mosquitto process (running as UID 1883) does not have permission to access the host directories.
+
+To fix this, run the following command on your host:
+
+```bash
+sudo chown -R 1883:1883 certs/ data/ log/
+docker-compose restart mqtt-broker
+```
+
+This ensures the container's internal user can read the SSL certificates and write to the persistence and log folders.
+
