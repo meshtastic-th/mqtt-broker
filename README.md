@@ -21,24 +21,48 @@ This project provides a Dockerized Eclipse Mosquitto MQTT broker configured to s
 
 ### 1. Generate Certificates
 
-Before starting the broker, you need to generate the TLS certificates. Run the provided script:
+You have two options for generating certificates:
+
+#### Option A: Self-Signed Certificates (Local/Testing)
+
+For local testing (defaults to `localhost`):
 
 ```bash
 chmod +x generate-certs.sh
-
-# For local testing (defaults to localhost)
-./generate-certs.sh
-
-# For a specific domain
 ./generate-certs.sh mqtt.meshgw.com
-
-# For a specific IP address
-./generate-certs.sh 192.168.1.10
 ```
 
-**Note:** The script automatically adds **Subject Alternative Names (SAN)** for both DNS and IP, which is required by modern MQTT clients and browsers for strict certificate validation. Ensure the argument you pass matches the address you will use to connect.
+#### Option B: Certbot (Public Domain with Let's Encrypt)
 
-This creates a CA certificate, a server key, and a signed server certificate in the `certs/` directory.
+If you have a public domain and want a trusted certificate, use Certbot.
+
+1.  **Generate Certificate:**
+    Ensure port 80 is open on your host or use your preferred Certbot method.
+    ```bash
+    sudo certbot certonly --standalone -d mqtt.yourdomain.com
+    ```
+2.  **Copy and Configure:**
+    Run the provided script to copy the certificates into the project's `certs/` directory:
+    ```bash
+    chmod +x use-certbot.sh
+    ./use-certbot.sh mqtt.yourdomain.com
+    ```
+
+3.  **Renewal (Manual or Automated):**
+    When the certificate is renewed by Certbot, you must re-copy the files and restart the broker.
+    **Manual:**
+    ```bash
+    ./use-certbot.sh mqtt.yourdomain.com
+    docker-compose restart mqtt-broker
+    ```
+    **Automated Renewal Hook:**
+    Add a post-renewal hook to your Certbot configuration:
+    ```bash
+    # Test renewal with hook
+    sudo certbot renew --dry-run --post-hook "cd $(pwd) && ./use-certbot.sh mqtt.yourdomain.com && docker-compose restart mqtt-broker"
+    ```
+
+**Note:** The script automatically adds **Subject Alternative Names (SAN)** for both DNS and IP (in self-signed mode), which is required by modern MQTT clients and browsers for strict certificate validation. Ensure the argument you pass matches the address you will use to connect.
 
 ### 2. Start the Broker
 
