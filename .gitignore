@@ -1,1 +1,12 @@
+# Certificates
 certs/*
+!certs/.gitkeep
+
+# Data and Logs
+data/*
+!data/.gitkeep
+log/*
+!log/.gitkeep
+
+# OS files
+.DS_Store
