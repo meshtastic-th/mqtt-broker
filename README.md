@@ -48,18 +48,24 @@ If you have a public domain and want a trusted certificate, use Certbot.
     ./use-certbot.sh mqtt.yourdomain.com
     ```
 
-3.  **Renewal (Manual or Automated):**
-    When the certificate is renewed by Certbot, you must re-copy the files and restart the broker.
-    **Manual:**
+3.  **Renewal:**
+    When the certificate is renewed by Certbot, you must re-copy the files and restart the broker. Use the provided renewal script:
+
     ```bash
-    ./use-certbot.sh mqtt.yourdomain.com
-    docker-compose restart mqtt-broker
+    chmod +x renew-certs.sh
+    ./renew-certs.sh mqtt.yourdomain.com
     ```
-    **Automated Renewal Hook:**
-    Add a post-renewal hook to your Certbot configuration:
+
+    **Automated Renewal (Crontab):**
+    You can automate this by adding a cron job (e.g., once a week). Run `crontab -e` and add:
     ```bash
-    # Test renewal with hook
-    sudo certbot renew --dry-run --post-hook "cd $(pwd) && ./use-certbot.sh mqtt.yourdomain.com && docker-compose restart mqtt-broker"
+    0 0 * * 0 /path/to/mqtt-broker/renew-certs.sh mqtt.yourdomain.com >> /var/log/mqtt-renewal.log 2>&1
+    ```
+
+    **Alternatively (Certbot Hook):**
+    Add a post-renewal hook directly to your Certbot configuration:
+    ```bash
+    sudo certbot renew --dry-run --post-hook "/path/to/mqtt-broker/renew-certs.sh mqtt.yourdomain.com"
     ```
 
 **Note:** The script automatically adds **Subject Alternative Names (SAN)** for both DNS and IP (in self-signed mode), which is required by modern MQTT clients and browsers for strict certificate validation. Ensure the argument you pass matches the address you will use to connect.
